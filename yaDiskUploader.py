@@ -44,20 +44,21 @@ class YaDiskUploader:
         )
 
         href_operation = upload_response.json()['href']
+        return href_operation
 
-        operation_status = True
-        while operation_status:
-            operation_result = requests.get(
-                href_operation,
-                headers={
-                    'Authorization': f'OAuth {self.token}'
-                }
-            )
-            operation_result.raise_for_status()
-            if operation_result.json()['status'] == 'success':
-                operation_status = False
+    def check_operation_ended(self, operation_href):
+        operation_ended = False
+        operation_result = requests.get(
+            operation_href,
+            headers={
+                'Authorization': f'OAuth {self.token}'
+            }
+        )
+        operation_result.raise_for_status()
+        if operation_result.json()['status'] == 'success':
+            operation_ended = True
 
-        return True
+        return operation_ended
 
     def is_token_exists(self):
         response = requests.get(

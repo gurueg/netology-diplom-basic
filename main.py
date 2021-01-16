@@ -51,6 +51,7 @@ def main():
     )
 
     json_list = []
+    operations_list = []
 
     for photo in photos_list:
         file_name = str(photo['likes']['count'])
@@ -62,14 +63,21 @@ def main():
         file_format = file_url.split('?')[0].split('.')[-1]
 
         file_name += file_format
-        uploader.upload_file_from_url(
+        operation_href = uploader.upload_file_from_url(
             file_url,
             file_name,
             'FromVkUploader'
         )
+        operations_list.append(operation_href)
         json_list.append({'file_name': file_name, 'size': size_data['type']})
 
-        bar.next()
+    operations_done = []
+    while(len(operations_done) != len(operations_list)):
+        for operation in operations_list:
+            if operation not in operations_done:
+                if uploader.check_operation_ended(operation):
+                    operations_done.append(operation)
+                    bar.next()
     bar.finish()
 
     with open('result.json', 'w', encoding='utf-8') as result_file:
