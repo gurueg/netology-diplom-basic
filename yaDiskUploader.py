@@ -7,7 +7,7 @@ class YaDiskUploader:
     def __init__(self, token: str):
         self.token = token
 
-    def upload_file_from_url(self, url: str, filename: str, foldername: str):
+    def check_and_create_folder(self, foldername: str):
         response = requests.get(
             self.url,
             params={
@@ -31,6 +31,10 @@ class YaDiskUploader:
             response.raise_for_status()
         else:
             response.raise_for_status()
+
+    def upload_file_from_url(self, url: str, filename: str, foldername: str):
+
+        self.check_and_create_folder(foldername)
 
         upload_response = requests.post(
             self.url + '/upload',

@@ -16,6 +16,33 @@ def get_max_photo_data(sizes_array):
     return sizes_array[-1]
 
 
+def get_likes_counts(photos_data):
+    likes_dict = {}
+    for photo in photos_data:
+        likes_count = str(photo['likes']['count'])
+        if likes_count in likes_dict.keys():
+            likes_dict[likes_count] += 1
+        else:
+            likes_dict[likes_count] = 1
+    return likes_dict
+
+
+def wait_for_all_operations(operations, diskUploader):
+    bar = IncrementalBar(
+        max=len(operations),
+        message='Загрузка'
+    )
+
+    operations_done = []
+    while(len(operations_done) != len(operations)):
+        for operation in operations:
+            if operation not in operations_done:
+                if diskUploader.check_operation_ended(operation):
+                    operations_done.append(operation)
+                    bar.next()
+    bar.finish()
+
+
 def main():
 
     user_id = input('Введите id пользователя вКонтакте: ')
@@ -37,18 +64,7 @@ def main():
     else:
         photos_list = new_user.get_user_profile_photos()
 
-    likes_dict = {}
-    for photo in photos_list:
-        likes_count = str(photo['likes']['count'])
-        if likes_count in likes_dict.keys():
-            likes_dict[likes_count] += 1
-        else:
-            likes_dict[likes_count] = 1
-
-    bar = IncrementalBar(
-        max=len(photos_list),
-        message='Загрузка'
-    )
+    likes_dict = get_likes_counts(photos_list)
 
     json_list = []
     operations_list = []
@@ -71,14 +87,7 @@ def main():
         operations_list.append(operation_href)
         json_list.append({'file_name': file_name, 'size': size_data['type']})
 
-    operations_done = []
-    while(len(operations_done) != len(operations_list)):
-        for operation in operations_list:
-            if operation not in operations_done:
-                if uploader.check_operation_ended(operation):
-                    operations_done.append(operation)
-                    bar.next()
-    bar.finish()
+    wait_for_all_operations(operations_list, uploader)
 
     with open('result.json', 'w', encoding='utf-8') as result_file:
         json.dump(json_list, result_file, ensure_ascii=True, indent=4)
